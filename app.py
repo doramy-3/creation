@@ -10,9 +10,9 @@ total_flour = st.number_input("粉の総量を決める (g)", min_value=50, max_
 
 st.markdown("---")
 
-# 【新機能】王道ベースの選択
+# 2. 王道ベースの選択
 st.header("2. 編集するベースのパンを選ぶ")
-st.caption("選んだパンの『王道の比率』が下のスライダーに自動セットされます。そこから自由に微調整してください。")
+st.caption("選んだパンの『王道の比率』に下のスライダーが自動でパチッと切り替わります。")
 
 base_type = st.selectbox(
     "ベースのパンを選択",
@@ -22,42 +22,29 @@ base_type = st.selectbox(
         "食パン系（ふんわり・毎日用）",
         "基本の成形パン（甘め・菓子パン系）",
         "基本の成形パン（おかず・惣菜系）"
-    ]
+    ],
+    key="base_type_select"
 )
 
-# 各ベースの初期値設定
-init_water = 75
-init_yeast = 1.0
-init_salt = 2.0
-init_sugar = 0
-init_fat = 0
+# 各ベースの数値データ定義
+base_presets = {
+    "高加水＆こねない系（リュスティック等）": {"water": 80, "yeast": 0.5, "salt": 2.0, "sugar": 0, "fat": 0},
+    "フランスパン系（準強力粉風・シンプル）": {"water": 70, "yeast": 1.0, "salt": 2.0, "sugar": 0, "fat": 0},
+    "食パン系（ふんわり・毎日用）": {"water": 68, "yeast": 1.5, "salt": 2.0, "sugar": 5, "fat": 5},
+    "基本の成形パン（甘め・菓子パン系）": {"water": 65, "yeast": 1.5, "salt": 1.5, "sugar": 15, "fat": 15},
+    "基本の成形パン（おかず・惣菜系）": {"water": 62, "yeast": 1.5, "salt": 2.0, "sugar": 8, "fat": 8}
+}
 
-if base_type == "高加水＆こねない系（リュスティック等）":
-    init_water = 80
-    init_yeast = 0.5
-    init_salt = 2.0
-elif base_type == "フランスパン系（準強力粉風・シンプル）":
-    init_water = 70
-    init_yeast = 1.0
-    init_salt = 2.0
-elif base_type == "食パン系（ふんわり・毎日用）":
-    init_water = 68
-    init_yeast = 1.5
-    init_salt = 2.0
-    init_sugar = 5
-    init_fat = 5
-elif base_type == "基本の成形パン（甘め・菓子パン系）":
-    init_water = 65
-    init_yeast = 1.5
-    init_salt = 1.5
-    init_sugar = 15
-    init_fat = 15
-elif base_type == "基本の成形パン（おかず・惣菜系）":
-    init_water = 62
-    init_yeast = 1.5
-    init_salt = 2.0
-    init_sugar = 8
-    init_fat = 8
+preset = base_presets[base_type]
+
+# セレクトボックスが変わった時に、スライダーの値を強制的に書き換える処理（超重要！）
+if "current_base" not in st.session_state or st.session_state.current_base != base_type:
+    st.session_state.current_base = base_type
+    st.session_state.water = preset["water"]
+    st.session_state.yeast = float(preset["yeast"])
+    st.session_state.salt = float(preset["salt"])
+    st.session_state.sugar = preset["sugar"]
+    st.session_state.fat = preset["fat"]
 
 st.markdown("---")
 
@@ -71,7 +58,6 @@ whole_wheat_pct = st.slider("🟤 全粒粉の割合 (%)", min_value=0, max_valu
 # 強力粉は残りのパーセント
 wheat_pct = 100 - rice_pct - whole_wheat_pct
 
-# エラーバグ修正：st.emptyを使って画面描写を安定させる
 error_placeholder = st.empty()
 if wheat_pct < 0:
     error_placeholder.error("⚠️ 粉の合計が100%を超えています！米粉や全粒粉の割合を減らしてください。")
@@ -81,15 +67,15 @@ else:
 
 st.markdown("---")
 
-# 4. 水分・副材料の微調整（初期値にベースパンの数値を連動！）
+# 4. 水分・副材料の微調整
 st.header("4. 水分・ベーカーズパーセントの微調整")
 st.caption("上で選んだパンの基準値になっています。スライダーで好みに書き換えてOK！")
 
-water_pct = st.slider("💧 水分量（加水率 %）", min_value=50, max_value=90, value=init_water, step=1, key="water")
-yeast_pct = st.slider("🧪 ドライイースト (%)", min_value=0.1, max_value=3.0, value=float(init_yeast), step=0.1, key="yeast")
-salt_pct = st.slider("🧂 塩 (%)", min_value=0.0, max_value=3.0, value=float(init_salt), step=0.1, key="salt")
-sugar_pct = st.slider("🍬 砂糖 (%)", min_value=0, max_value=25, value=init_sugar, step=1, key="sugar")
-fat_pct = st.slider("🧈 油脂 (%)", min_value=0, max_value=25, value=init_fat, step=1, key="fat")
+water_pct = st.slider("💧 水分量（加水率 %）", min_value=50, max_value=90, step=1, key="water")
+yeast_pct = st.slider("🧪 ドライイースト (%)", min_value=0.1, max_value=3.0, step=0.1, key="yeast")
+salt_pct = st.slider("🧂 塩 (%)", min_value=0.0, max_value=3.0, step=0.1, key="salt")
+sugar_pct = st.slider("🍬 砂糖 (%)", min_value=0, max_value=25, step=1, key="sugar")
+fat_pct = st.slider("🧈 油脂 (%)", min_value=0, max_value=25, step=1, key="fat")
 
 # --- グラム計算 ---
 wheat_g = total_flour * (wheat_pct / 100)
@@ -106,7 +92,6 @@ fat_g = total_flour * (fat_pct / 100)
 st.markdown("---")
 st.subheader("📋 あなたがデザインした黄金レシピ")
 
-# 粉がフランスパン系のときは「準強力粉（または強力粉＋薄力粉）」と表示する粋な演出
 flour_label = "準強力粉（または強力粉8割＋薄力粉2割）" if base_type == "フランスパン系（準強力粉風・シンプル）" else "強力粉"
 
 st.write(f"・**{flour_label}:** {wheat_g:.0f} g ({wheat_pct}%)")
@@ -127,7 +112,6 @@ if fat_g > 0:
 # 動的なアドバイス表示
 st.markdown("---")
 st.subheader("💡 配合診断アドバイス")
-advice_placeholder = st.empty()
 
 if rice_pct > 20:
     st.warning("⚠️ **米粉が20%を超えています:** グルテンが不足して膨らみにくくなる可能性があります。少ししっかりめに捏ねるか、型に入れて焼くのが安全です。")
@@ -135,3 +119,5 @@ if water_pct >= 80:
     st.info("💧 **超・高加水モードです:** 生地がかなりドロドロになります。捏ねずに、タッパーの中で『折りたたむ』ようにして発酵させ、リュスティック風にスプーンやカードで切り分けて焼きましょう！")
 if base_type == "フランスパン系（準強力粉風・シンプル）" and (sugar_pct > 0 or fat_pct > 0):
     st.info("🥖 **アレンジTips:** 本格フランスパンは砂糖・油脂0%ですが、あえて少し加えることで、皮が柔らかく食べやすいソフトフランスになりますよ！")
+if base_type == "基本の成形パン（おかず・惣菜系）" and water_pct > 65:
+    st.warning("⚠️ **おかずパンの加水注意:** 具材を包むパンで水分が多いと生地がダレて包みにくくなります。慣れるまでは62〜65%に抑えるのがおすすめです。")
